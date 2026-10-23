@@ -1,0 +1,93 @@
+name: Verify Pauta
+
+on:
+  push:
+    branches: [main, feat/mvp]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Quality, PostgreSQL integration and browser flow
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: pauta
+          POSTGRES_PASSWORD: pauta_ci
+          POSTGRES_DB: pauta
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pauta -d pauta"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      postgres-test:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: pauta
+          POSTGRES_PASSWORD: pauta_ci
+          POSTGRES_DB: pauta_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U pauta -d pauta_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://pauta:pauta_ci@127.0.0.1:5432/pauta
+      TEST_DATABASE_URL: postgresql://pauta:pauta_ci@127.0.0.1:5433/pauta_test
+      PORT: '3001'
+      CORS_ORIGIN: http://127.0.0.1:5178
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Use project Node version
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Migrate isolated integration database
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+      - name: Unit and PostgreSQL integration tests
+        run: npm test
+      - name: Build application
+        run: npm run build
+      - name: Migrate browser database
+        run: npm run db:migrate
+      - name: Seed synthetic browser data
+        run: npm run db:seed
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Browser flow with real API and PostgreSQL
+        run: npm run test:e2e
+      - name: Preserve browser reports and failure traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
