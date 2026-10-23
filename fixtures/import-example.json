@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "meetings": [{
+    "externalId": "demo-importacao-oficina",
+    "title": "Oficina de próximos passos — demonstração",
+    "startedAt": "2026-10-22T15:00:00-03:00",
+    "participants": ["Nina Campos", "Rui Alves"],
+    "topics": ["Apresentação do projeto", "Roteiro de teste"],
+    "segments": [
+      {"id": "oficina-01", "speaker": "Nina Campos", "at": "00:00:00", "text": "Este é um exemplo inteiramente sintético. Vamos percorrer o fluxo completo de importação e acompanhamento de ações."},
+      {"id": "oficina-02", "speaker": "Rui Alves", "at": "00:01:30", "text": "Vou preparar o roteiro de demonstração até amanhã. Podemos abrir este trecho depois para conferir a origem do compromisso."}
+    ],
+    "actions": [{"title": "Preparar roteiro da oficina", "owner": "Rui Alves", "dueDate": "2026-10-23", "status": "pending", "sourceSegmentId": "oficina-02"}]
+  }]
+}

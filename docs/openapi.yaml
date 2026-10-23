@@ -1,0 +1,263 @@
+openapi: 3.1.0
+info:
+  title: Pauta — Meeting Insights
+  version: 1.0.0
+  description: API local com dados sintéticos. Sem autenticação no MVP. Datas de calendário e atraso usam America/Sao_Paulo.
+servers:
+  - url: http://localhost:3001/api
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: PostgreSQL disponível
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string, const: ok}
+        '503': {$ref: '#/components/responses/Error'}
+  /imports:
+    post:
+      operationId: importMeetings
+      description: Lote atômico de até 1 MiB; qualquer externalId existente reverte todo o lote com 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ImportBatch'}
+      responses:
+        '201':
+          description: Lote persistido
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [meetingCount, actionCount]
+                properties:
+                  meetingCount: {type: integer}
+                  actionCount: {type: integer}
+        '400': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '415': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /meetings:
+    get:
+      operationId: listMeetings
+      parameters:
+        - {$ref: '#/components/parameters/Page'}
+        - {$ref: '#/components/parameters/PageSize'}
+        - {name: q, in: query, schema: {type: string, maxLength: 200}, description: Busca literal parcial no título sem distinção de maiúsculas}
+        - {name: from, in: query, schema: {type: string, format: date}, description: Início inclusivo em São Paulo}
+        - {name: to, in: query, schema: {type: string, format: date}, description: Fim inclusivo em São Paulo}
+      responses:
+        '200':
+          description: Lista filtrada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/Pagination'}
+                  - type: object
+                    properties:
+                      items: {type: array, items: {$ref: '#/components/schemas/Meeting'}}
+        '400': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /meetings/{id}:
+    get:
+      operationId: getMeeting
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+      responses:
+        '200':
+          description: Detalhe da reunião
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/Meeting'}
+                  - type: object
+                    required: [segments, actions]
+                    properties:
+                      segments: {type: array, items: {$ref: '#/components/schemas/Segment'}}
+                      actions: {type: array, items: {$ref: '#/components/schemas/Action'}}
+        '400': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /actions:
+    get:
+      operationId: listActions
+      parameters:
+        - {$ref: '#/components/parameters/Page'}
+        - {$ref: '#/components/parameters/PageSize'}
+        - {name: owner, in: query, schema: {type: string, maxLength: 200}, description: Busca literal parcial sem distinção de maiúsculas}
+        - {name: status, in: query, schema: {$ref: '#/components/schemas/Status'}}
+        - {name: overdue, in: query, schema: {type: string, enum: ['true', 'false']}}
+      responses:
+        '200':
+          description: Ações com filtros combinados
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/Pagination'}
+                  - type: object
+                    properties:
+                      items: {type: array, items: {$ref: '#/components/schemas/Action'}}
+        '400': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /actions/{id}:
+    patch:
+      operationId: updateAction
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                owner: {$ref: '#/components/schemas/ShortText'}
+                dueDate: {type: [string, 'null'], format: date}
+                status: {$ref: '#/components/schemas/Status'}
+      responses:
+        '200':
+          description: Ação atualizada persistentemente
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Action'}
+        '400': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+  /summary:
+    get:
+      operationId: getSummary
+      description: Indicadores globais. Atrasadas têm prazo anterior a referenceDate e status diferente de done.
+      responses:
+        '200':
+          description: Indicadores de todo o banco
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [meetingCount, actionCount, openCount, overdueCount, byStatus, referenceDate, timeZone]
+                properties:
+                  meetingCount: {type: integer}
+                  actionCount: {type: integer}
+                  openCount: {type: integer}
+                  overdueCount: {type: integer}
+                  referenceDate: {type: string, format: date}
+                  timeZone: {type: string, const: America/Sao_Paulo}
+                  byStatus:
+                    type: object
+                    required: [pending, in_progress, done]
+                    properties:
+                      pending: {type: integer}
+                      in_progress: {type: integer}
+                      done: {type: integer}
+        '500': {$ref: '#/components/responses/Error'}
+components:
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+    Page: {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000, default: 1}}
+    PageSize: {name: pageSize, in: query, schema: {type: integer, minimum: 1, maximum: 50, default: 10}}
+  responses:
+    Error:
+      description: Erro padronizado; não expõe detalhes internos
+      headers:
+        X-Request-ID:
+          schema: {type: string, format: uuid}
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code: {type: string}
+                  message: {type: string}
+                  fields: {type: object, additionalProperties: {type: string}}
+  schemas:
+    ShortText: {type: string, minLength: 1, maxLength: 200}
+    Status: {type: string, enum: [pending, in_progress, done]}
+    Pagination:
+      type: object
+      required: [items, total, page, pageSize]
+      properties:
+        total: {type: integer, minimum: 0}
+        page: {type: integer, minimum: 1}
+        pageSize: {type: integer, minimum: 1, maximum: 50}
+    Segment:
+      type: object
+      additionalProperties: false
+      required: [id, speaker, at, text]
+      properties:
+        id: {$ref: '#/components/schemas/ShortText'}
+        speaker: {$ref: '#/components/schemas/ShortText'}
+        at: {type: string, pattern: '^\d{2}:[0-5]\d:[0-5]\d$'}
+        text: {type: string, minLength: 1, maxLength: 10000}
+    ImportAction:
+      type: object
+      additionalProperties: false
+      required: [title, owner, status]
+      properties:
+        title: {$ref: '#/components/schemas/ShortText'}
+        owner: {$ref: '#/components/schemas/ShortText'}
+        dueDate: {type: [string, 'null'], format: date}
+        status: {$ref: '#/components/schemas/Status'}
+        sourceSegmentId: {type: [string, 'null'], maxLength: 200, minLength: 1}
+    ImportBatch:
+      type: object
+      additionalProperties: false
+      required: [version, meetings]
+      properties:
+        version: {type: integer, const: 1}
+        meetings:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required: [externalId, title, startedAt, participants, topics, segments, actions]
+            properties:
+              externalId: {$ref: '#/components/schemas/ShortText'}
+              title: {$ref: '#/components/schemas/ShortText'}
+              startedAt: {type: string, format: date-time}
+              participants: {type: array, minItems: 1, maxItems: 50, items: {$ref: '#/components/schemas/ShortText'}}
+              topics: {type: array, maxItems: 30, items: {$ref: '#/components/schemas/ShortText'}}
+              segments: {type: array, minItems: 1, maxItems: 500, items: {$ref: '#/components/schemas/Segment'}}
+              actions: {type: array, maxItems: 200, items: {$ref: '#/components/schemas/ImportAction'}}
+    Meeting:
+      type: object
+      required: [id, externalId, title, startedAt, participants, topics, actionCount]
+      properties:
+        id: {type: string, format: uuid}
+        externalId: {type: string}
+        title: {type: string}
+        startedAt: {type: string, format: date-time}
+        participants: {type: array, items: {type: string}}
+        topics: {type: array, items: {type: string}}
+        actionCount: {type: integer}
+    Action:
+      type: object
+      required: [id, meetingId, meetingTitle, title, owner, status, dueDate, sourceSegmentId, overdue]
+      properties:
+        id: {type: string, format: uuid}
+        meetingId: {type: string, format: uuid}
+        meetingTitle: {type: string}
+        title: {type: string}
+        owner: {type: string}
+        status: {$ref: '#/components/schemas/Status'}
+        dueDate: {type: [string, 'null'], format: date}
+        sourceSegmentId: {type: [string, 'null']}
+        overdue: {type: boolean}

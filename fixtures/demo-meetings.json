@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "meetings": [
+    {
+      "externalId": "demo-editorial-outubro",
+      "title": "Planejamento editorial de novembro",
+      "startedAt": "2026-10-21T09:00:00-03:00",
+      "participants": ["Ana Martins", "Bruno Costa", "Lia Rocha"],
+      "topics": ["Calendário editorial", "Pesquisa com leitores", "Próximos passos"],
+      "segments": [
+        {"id": "editorial-01", "speaker": "Ana Martins", "at": "00:00:00", "text": "Vamos organizar novembro em torno das dúvidas dos nossos leitores. Estes nomes e situações são inteiramente fictícios, para demonstração."},
+        {"id": "editorial-02", "speaker": "Bruno Costa", "at": "00:02:15", "text": "Posso preparar a primeira versão do calendário até sexta. Vou reservar espaço para revisar os artigos depois da pesquisa."},
+        {"id": "editorial-03", "speaker": "Lia Rocha", "at": "00:04:30", "text": "A pesquisa já tem um roteiro revisado. Falta enviar o convite fictício e reunir as perguntas mais frequentes."},
+        {"id": "editorial-04", "speaker": "Ana Martins", "at": "00:06:10", "text": "Combinado. Eu reviso os títulos na próxima semana. O calendário pode avançar enquanto consolidamos as respostas."}
+      ],
+      "actions": [
+        {"title": "Preparar calendário editorial de novembro", "owner": "Bruno Costa", "dueDate": "2026-10-23", "status": "in_progress", "sourceSegmentId": "editorial-02"},
+        {"title": "Consolidar perguntas da pesquisa", "owner": "Lia Rocha", "dueDate": "2026-10-20", "status": "pending", "sourceSegmentId": "editorial-03"},
+        {"title": "Revisar títulos dos artigos", "owner": "Ana Martins", "dueDate": "2026-10-27", "status": "pending", "sourceSegmentId": "editorial-04"}
+      ]
+    },
+    {
+      "externalId": "demo-produto-outubro",
+      "title": "Revisão do protótipo de biblioteca",
+      "startedAt": "2026-10-19T14:30:00-03:00",
+      "participants": ["Lia Rocha", "Caio Nunes", "Ana Martins"],
+      "topics": ["Navegação por teclado", "Busca", "Teste de leitura"],
+      "segments": [
+        {"id": "produto-01", "speaker": "Caio Nunes", "at": "00:00:00", "text": "O protótipo fictício já permite consultar artigos. Na próxima rodada vamos observar se as pessoas encontram os filtros sem ajuda."},
+        {"id": "produto-02", "speaker": "Lia Rocha", "at": "00:03:20", "text": "Concluí a revisão dos rótulos. Ainda precisamos tornar o foco dos links mais evidente e testar a sequência do teclado."},
+        {"id": "produto-03", "speaker": "Ana Martins", "at": "00:05:40", "text": "Vou preparar um roteiro curto com três tarefas de busca. Podemos deixá-lo sem prazo até combinar a próxima sessão."}
+      ],
+      "actions": [
+        {"title": "Revisar rótulos dos filtros", "owner": "Lia Rocha", "dueDate": "2026-10-18", "status": "done", "sourceSegmentId": "produto-02"},
+        {"title": "Ajustar foco visível na biblioteca", "owner": "Caio Nunes", "dueDate": "2026-10-21", "status": "in_progress", "sourceSegmentId": "produto-02"},
+        {"title": "Preparar roteiro de busca", "owner": "Ana Martins", "dueDate": null, "status": "pending", "sourceSegmentId": "produto-03"}
+      ]
+    },
+    {
+      "externalId": "demo-operacao-outubro",
+      "title": "Alinhamento de operação e documentação",
+      "startedAt": "2026-10-16T10:00:00-03:00",
+      "participants": ["Bruno Costa", "Caio Nunes"],
+      "topics": ["Documentação", "Checklist de publicação"],
+      "segments": [
+        {"id": "operacao-01", "speaker": "Bruno Costa", "at": "00:00:00", "text": "A documentação de exemplo agora tem instruções de início. Quero deixar claro quais etapas são necessárias para uma demonstração local."},
+        {"id": "operacao-02", "speaker": "Caio Nunes", "at": "00:02:10", "text": "Já conferi os links e finalizei a lista de verificação. Podemos registrar uma revisão conjunta do roteiro para o próximo encontro."}
+      ],
+      "actions": [
+        {"title": "Conferir links da documentação", "owner": "Caio Nunes", "dueDate": "2026-10-16", "status": "done", "sourceSegmentId": "operacao-02"},
+        {"title": "Revisar roteiro de demonstração", "owner": "Bruno Costa", "dueDate": "2026-10-22", "status": "pending", "sourceSegmentId": null}
+      ]
+    }
+  ]
+}
