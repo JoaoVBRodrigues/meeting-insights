@@ -7,6 +7,7 @@ Windows, Node 22.23.2, npm 10.9.8, PostgreSQL 17 via Docker Compose, Chromium in
 
 | Verificação | Resultado |
 | --- | --- |
+| `npm ci` | Instalação pelo lockfile passou; audit sem vulnerabilidades |
 | `npm run lint` | Passou |
 | `npm run typecheck` | Passou nos dois workspaces |
 | `npm test` | 17 testes API/guard com PostgreSQL + 14 testes React passaram |
@@ -20,6 +21,8 @@ Os testes API cobrem JSON inválido, limite, campo inválido, datas/fusos invál
 Os testes React cobrem falha/retry, gráfico/tabela, calendário, skip link, filtros, PATCH, resposta salva, origem e HTML não executado, importação inválida e troca de arquivo, manutenção do foco na paginação e remoção da ação que sai do filtro.
 
 E2E: importação via teclado → busca → reunião → origem com foco → alteração de responsável e status → salvar → recarregar → indicadores globais. A suíte também simula falha de resumo e recuperação e executa axe em quatro páginas a 360/768/1440px, além do detalhe no fluxo. Os dados próprios do E2E são sintéticos e permanecem no banco usado pelo navegador; use um banco dedicado para demonstrações limpas.
+
+Partida a frio também verificada após `npm ci`: 3/3 E2E passaram em 37,2s. O Playwright aguarda `/api/health` através do proxy antes de iniciar os testes, assegurando conexão entre frontend, API e PostgreSQL.
 
 ## Inspeção e limites
 
